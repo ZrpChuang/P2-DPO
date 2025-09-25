@@ -30,7 +30,7 @@ First, create a virtual environment (e.g., using `conda` or `venv`) and install 
 
 ```bash
 # Create and activate a conda environment (optional but recommended)
-# conda create -n p2dpo python=3.9
+# conda create -n p2dpo python=3.10
 # conda activate p2dpo
 
 # Install dependencies
