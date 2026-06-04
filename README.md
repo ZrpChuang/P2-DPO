@@ -144,9 +144,13 @@ Hallucination-Bench/
 ## Citation
 
 ```bibtex
-@misc{zhang2026p2dpo,
-  title  = {P2-DPO: Grounding Hallucination in Perceptual Processing via Calibration Direct Preference Optimization},
-  author = {Zhang, Ruipeng and Li, Zhihao and Yuan, Haozhang and Chen, C. L. Philip and Zhang, Tong},
-  year   = {2026}
+@misc{zhang2026p2dpogroundinghallucinationperceptual,
+      title={P$^2$-DPO: Grounding Hallucination in Perceptual Processing via Calibration Direct Preference Optimization}, 
+      author={Ruipeng Zhang and Zhihao Li and Haozhang Yuan and C. L. Philip Chen and Tong Zhang},
+      year={2026},
+      eprint={2606.03376},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2606.03376}, 
 }
 ```
