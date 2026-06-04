@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://arxiv.org/abs/2606.03376"><img alt="Paper" src="https://img.shields.io/badge/Paper-arXiv%3A2606.03376-b31b1b"></a>
-  <a href="https://github.com/ZrpChuang/P2-DPO"><img alt="Code" src="https://img.shields.io/badge/Code-P2--DPO-2f6f73"></a>
+  <a href="https://github.com/ZrpChuang/P2-DPO"><img alt="Code" src="https://img.shields.io/badge/Code-P%C2%B2--DPO-2f6f73"></a>
   <img alt="Task" src="https://img.shields.io/badge/Task-LVLM%20Hallucination-7a4f9f">
   <img alt="Method" src="https://img.shields.io/badge/Method-Self--Generated%20Preference%20Pairs-b65d3b">
 </p>
@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <img src="assets/readme/framework.png" alt="P2-DPO framework" width="100%">
+  <img src="assets/readme/framework.png" alt="P squared DPO framework" width="100%">
 </p>
 
 ## Overview
@@ -50,13 +50,13 @@ The framework builds two complementary preference signals from the model's own b
 | Area | Path | Purpose |
 | --- | --- | --- |
 | Preference generation | `Data_gen/` | Scripts for constructing focus-and-enhance and visual robustness pairs. |
-| Training | `Training/` | P2-DPO and ablation training entry points. |
+| Training | `Training/` | P<sup>2</sup>-DPO and ablation training entry points. |
 | Evaluation | `POPE/`, `AMBER/`, `MMHal-Bench/`, `Hallucination-Bench/` | Benchmark scripts for hallucination and trustworthiness evaluation. |
 | Model helpers | `qwen2_vl/`, `AMBER/qwen2_vl/` | Utility code used by Qwen2-VL based evaluation paths. |
 
 ## Method
 
-P2-DPO starts from an image-question pair and lets the reference model construct its own learning signal. The data is therefore on-policy and visually grounded by construction.
+P<sup>2</sup>-DPO starts from an image-question pair and lets the reference model construct its own learning signal. The data is therefore on-policy and visually grounded by construction.
 
 1. **Attend.** Obtain answer-to-image attention maps from the reference model.
 2. **Intervene.** Produce enhanced, degraded, and noisy visual contexts from the original image.
