@@ -9,6 +9,7 @@
 </p>
 
 <p align="center">
+  <a href="https://arxiv.org/abs/2606.03376"><img alt="Paper" src="https://img.shields.io/badge/Paper-arXiv%3A2606.03376-b31b1b"></a>
   <a href="https://github.com/ZrpChuang/P2-DPO"><img alt="Code" src="https://img.shields.io/badge/Code-P2--DPO-2f6f73"></a>
   <img alt="Task" src="https://img.shields.io/badge/Task-LVLM%20Hallucination-7a4f9f">
   <img alt="Method" src="https://img.shields.io/badge/Method-Self--Generated%20Preference%20Pairs-b65d3b">
@@ -61,10 +62,6 @@ P2-DPO starts from an image-question pair and lets the reference model construct
 2. **Intervene.** Produce enhanced, degraded, and noisy visual contexts from the original image.
 3. **Compare.** Generate preference pairs that isolate perceptual bottlenecks and robustness failures.
 4. **Calibrate.** Optimize with DPO plus calibration terms so visual interventions shape the preference margin.
-
-<p align="center">
-  <img src="assets/readme/robustness_curve.png" alt="Robustness under Gaussian noise" width="48%">
-</p>
 
 ## Qualitative Examples
 
