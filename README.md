@@ -111,6 +111,14 @@ Focus-and-enhance pairs:
 python Data_gen/focus_pair/generate.py
 ```
 
+Preference pair filtering:
+
+```bash
+python Data_gen/p2_pairs/filter_pairs.py \
+  --input /path/to/raw_pairs.json \
+  --output /path/to/filtered_pairs.json
+```
+
 </details>
 
 <details>
