@@ -75,7 +75,9 @@ deepspeed --include localhost:$gpu_vis --master_port $MASTER_PORT \
     --lazy_preprocess True \
     --log_project LLaVA-DPO-WL \
     --report_to wandb \
-    --dynamic_loss_weighting False \
-    --lambda_cal 0.2 \
-    --use_improvement_ratio_weighting True \
-    
+    --dynamic_loss_weighting True \
+    --lambda_cal 0.3 \
+    --ddw_base_weight 0.5 \
+    --ddw_alpha_max 0.2 \
+    --ddw_tau 0.1 \
+    --use_improvement_ratio_weighting True
