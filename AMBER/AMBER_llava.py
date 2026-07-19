@@ -84,11 +84,11 @@ def generate_model_responses(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model-path", type=str, default="/data/base_model/base_models_mllms/llava-v1.5-7b")
-    parser.add_argument("--model-base", type=str,  default="/data/base_model/base_models_mllms/llava-v1.5-7b")
-    parser.add_argument("--question-file", type=str, default="/data/ruipeng.zhang/dpo_on/AMBER/data/query/query_all.json")
-    parser.add_argument("--image-folder", type=str, default="/data/ruipeng.zhang/dpo_on/playground/AMBER_image")
-    parser.add_argument("--output-file", type=str, default="/data/ruipeng.zhang/dpo_on/eval/AMBER_output/AMBER_llava_responses_org.jsonl")
+    parser.add_argument("--model-path", type=str, default="llava-hf/llava-1.5-7b-hf")
+    parser.add_argument("--model-base", type=str,  default="llava-hf/llava-1.5-7b-hf")
+    parser.add_argument("--question-file", type=str, default="data/AMBER/query/query_all.json")
+    parser.add_argument("--image-folder", type=str, default="data/AMBER/images")
+    parser.add_argument("--output-file", type=str, default="outputs/AMBER/AMBER_llava_responses.jsonl")
     
     parser.add_argument("--conv-mode", type=str, default="llava_v1", help="Conversation template mode.")
     parser.add_argument("--temperature", type=float, default=0.2, help="Temperature for generation; smaller is more deterministic.")

@@ -90,9 +90,9 @@ def eval_model(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model-path", type=str, default="/data/ruipeng.zhang/dpo_on/output/llava_lora_r32_mix_on_fixdata_13vcd_newwt_lc1")
-    parser.add_argument("--model-base", type=str, default="/data/base_model/base_models_mllms/llava-v1.5-7b")
-    parser.add_argument("--image-folder", type=str, default="/data/ruipeng.zhang/VCD/experiments/data/coco/val2014")
+    parser.add_argument("--model-path", type=str, default="")
+    parser.add_argument("--model-base", type=str, default="llava-hf/llava-1.5-7b-hf")
+    parser.add_argument("--image-folder", type=str, default="data/coco/val2014")
     parser.add_argument("--conv-mode", type=str, default="llava_v1")
     parser.add_argument("--num-chunks", type=int, default=1)
     parser.add_argument("--chunk-idx", type=int, default=0)
@@ -103,12 +103,14 @@ if __name__ == "__main__":
     
     parser.add_argument("--question-file", type=str, default=None)
     parser.add_argument("--answers-file", type=str, default=None)
+    parser.add_argument("--question-dir", type=str, default="data/POPE/coco")
+    parser.add_argument("--answers-dir", type=str, default="outputs/POPE")
 
     args = parser.parse_args()
 
     pope_modes = ['adversarial', 'random', 'popular']
-    base_question_path = "/data/ruipeng.zhang/VCD/experiments/data/POPE/coco"
-    base_answers_path = "/data/ruipeng.zhang/dpo_on/POPE_eval/llava_mix_on_fixdatavcd_r32_lc1_newwt"
+    base_question_path = args.question_dir
+    base_answers_path = args.answers_dir
 
     for mode in pope_modes:
         print(f"--- [Starting mode: {mode}] ---")

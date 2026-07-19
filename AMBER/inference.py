@@ -14,12 +14,12 @@ warnings.filterwarnings("ignore", category=UserWarning)
 
 def get_args():
     parser = argparse.ArgumentParser(description="Run evaluation on model inference data.")
-    parser.add_argument("--word_association", type=str, default='/data/ruipeng.zhang/dpo_on/AMBER/data/relation.json', help="Path to the word association JSON file.")
-    parser.add_argument("--safe_words", type=str, default='/data/ruipeng.zhang/dpo_on/AMBER/data/safe_words.txt', help="Path to the safe words text file.")
+    parser.add_argument("--word_association", type=str, default="data/AMBER/relation.json", help="Path to the word association JSON file.")
+    parser.add_argument("--safe_words", type=str, default="data/AMBER/safe_words.txt", help="Path to the safe words text file.")
     parser.add_argument("--inference_data", type=str, required=True, help="Path to the model's inference output JSON file.")
-    parser.add_argument("--annotation", type=str, default='/data/ruipeng.zhang/dpo_on/AMBER/data/annotations.json', help="Path to the ground truth annotations JSON file.")
+    parser.add_argument("--annotation", type=str, default="data/AMBER/annotations.json", help="Path to the ground truth annotations JSON file.")
     
-    parser.add_argument("--output_file", type=str, default='/data/ruipeng.zhang/dpo_on/eval/AMBER_output/llava_AMBER_result_rlhfv.txt', help="File to save the evaluation results.")
+    parser.add_argument("--output_file", type=str, default="outputs/AMBER/llava_AMBER_result.txt", help="File to save the evaluation results.")
 
     parser.add_argument("--similarity_score", type=float, default=0.8, help="Threshold for word similarity.")
     parser.add_argument('--evaluation_type', choices=['a', 'g', 'd', 'de', 'da', 'dr'], default='a', help='a: all tasks and dimensions, g: generative, d: discriminative, de: existence, da: attribute, dr: relation')

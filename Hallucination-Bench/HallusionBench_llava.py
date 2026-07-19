@@ -114,9 +114,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     
     parser.add_argument("--model-path", type=str, default="", help="Path to your model weights.")
-    parser.add_argument("--model-base", type=str, default="/data/ruipeng.zhang/OPA-DPO/base_models/llava-v1.5-7b", help="Path to the base model if your model is a LoRA adapter.")
-    parser.add_argument("--template-file", type=str, default="/data/ruipeng.zhang/dpo_on/MMHal-Bench/response_template.json", help="Path to the MMHal-Bench template file.")
-    parser.add_argument("--image-folder", type=str, default="/data/ruipeng.zhang/dpo_on/MMHal-Bench/images", help="Path to the folder containing all MMHal-Bench images.")
+    parser.add_argument("--model-base", type=str, default="llava-hf/llava-1.5-7b-hf", help="Path to the base model if your model is a LoRA adapter.")
+    parser.add_argument("--template-file", type=str, default="data/MMHal-Bench/response_template.json", help="Path to the MMHal-Bench template file.")
+    parser.add_argument("--image-folder", type=str, default="data/MMHal-Bench/images", help="Path to the folder containing all MMHal-Bench images.")
     parser.add_argument("--output-file", type=str, default="./output/r32_mix_wt_on.json", help="Path to the output file for evaluation results.")
     
     parser.add_argument("--conv-mode", type=str, default="llava_v1", help="Conversation template mode.")
