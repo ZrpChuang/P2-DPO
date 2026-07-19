@@ -61,9 +61,7 @@ def eval_model(args):
         else:
             qs = raw_qs
         prompt_prefix_factual = "Strictly answer the following question according to the facts of the image, and control the length of the output. Based on this, answer the question:"
-        prompt_prefix_creative = "The image is processed with noise. For facts that are not clear in the image, you can use your imagination. Control the length of the answer. Based on this, answer the question:"
-        qs_factual = qs 
-        final_text_factual = f"{prompt_prefix_factual} {qs_factual}"
+        final_text_factual = f"{prompt_prefix_factual} {qs}"
         if model.config.mm_use_im_start_end:
             full_qs_factual = DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN + '\n' + final_text_factual
         else:
@@ -74,19 +72,6 @@ def eval_model(args):
         conv_factual.append_message(conv_factual.roles[1], None)
         prompt_factual = conv_factual.get_prompt()
         input_ids_factual = tokenizer_image_token(prompt_factual, tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt').squeeze(0)
-
-        qs_creative = qs
-        final_text_creative = f"{prompt_prefix_creative} {qs_creative}"
-        if model.config.mm_use_im_start_end:
-            full_qs_creative = DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN + '\n' + final_text_creative
-        else:
-            full_qs_creative = DEFAULT_IMAGE_TOKEN + '\n' + final_text_creative
-
-        conv_creative = conv_templates[args.conv_mode].copy()
-        conv_creative.append_message(conv_creative.roles[0], full_qs_creative)
-        conv_creative.append_message(conv_creative.roles[1], None)
-        prompt_creative = conv_creative.get_prompt()
-        input_ids_creative = tokenizer_image_token(prompt_creative, tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt').squeeze(0)
 
         try:
             image = Image.open(os.path.join(args.image_folder, image_file))
@@ -101,10 +86,12 @@ def eval_model(args):
         with torch.inference_mode():
             generation_config_normal = GenerationConfig.from_model_config(model.config)
             generation_config_normal.do_sample = True
-            generation_config_normal.temperature = 0.2
-            generation_config_normal.top_p = 0.9
+            generation_config_normal.temperature = args.temperature
+            generation_config_normal.top_p = args.top_p
             generation_config_normal.max_new_tokens = 256
             generation_config_normal.generation_mode = 'normal'
+            if args.top_k is not None:
+                generation_config_normal.top_k = args.top_k
 
             output_ids_normal = model.generate(
                 input_ids_factual.unsqueeze(0).cuda(), 
@@ -119,28 +106,32 @@ def eval_model(args):
             with torch.inference_mode():
                 generation_config_noisy = GenerationConfig.from_model_config(model.config)
                 generation_config_noisy.do_sample = True
-                generation_config_noisy.temperature = 1.5 
-                generation_config_noisy.top_p = 1.0 
-                generation_config_noisy.max_new_tokens = 80 
+                generation_config_noisy.temperature = args.temperature
+                generation_config_noisy.top_p = args.top_p
+                generation_config_noisy.max_new_tokens = 256
                 generation_config_noisy.generation_mode = 'noisy'
+                if args.top_k is not None:
+                    generation_config_noisy.top_k = args.top_k
                 
                 output_ids_noisy = model.generate(
-                    input_ids_creative.unsqueeze(0).cuda(),
+                    input_ids_factual.unsqueeze(0).cuda(),
                     images=image_tensor.unsqueeze(0).half().cuda(), 
                     images_cd=image_tensor_cd.unsqueeze(0).half().cuda(),
                     generation_config=generation_config_noisy
                 )
-            new_item["noisy_answer"] = decode_and_clean_outputs(output_ids_noisy, input_ids_creative.shape[0], tokenizer, "</s>")
+            new_item["noisy_answer"] = decode_and_clean_outputs(output_ids_noisy, input_ids_factual.shape[0], tokenizer, "</s>")
             
             with torch.inference_mode():
                 generation_config_cd = GenerationConfig.from_model_config(model.config)
                 generation_config_cd.do_sample = True
-                generation_config_cd.temperature = 0.2
-                generation_config_cd.top_p = 0.9
+                generation_config_cd.temperature = args.temperature
+                generation_config_cd.top_p = args.top_p
                 generation_config_cd.max_new_tokens = 256
                 generation_config_cd.generation_mode = 'contrastive'
                 generation_config_cd.cd_alpha = args.cd_alpha
                 generation_config_cd.cd_beta = args.cd_beta
+                if args.top_k is not None:
+                    generation_config_cd.top_k = args.top_k
                 
                 output_ids_cd = model.generate(
                     input_ids_factual.unsqueeze(0).cuda(), 
@@ -149,9 +140,23 @@ def eval_model(args):
                     generation_config=generation_config_cd
                 )
             new_item["cd_answer"] = decode_and_clean_outputs(output_ids_cd, input_ids_factual.shape[0], tokenizer, "</s>")
+            new_item["robust"] = {
+                "chosen": new_item["cd_answer"],
+                "rejected": new_item["noisy_answer"],
+                "noise_step": args.noise_step,
+                "cd_alpha": args.cd_alpha,
+                "cd_beta": args.cd_beta
+            }
         else:
             new_item["noisy_answer"] = "N/A (use_cd is False)"
             new_item["cd_answer"] = "N/A (use_cd is False)"
+            new_item["robust"] = {
+                "chosen": new_item["cd_answer"],
+                "rejected": new_item["noisy_answer"],
+                "noise_step": args.noise_step,
+                "cd_alpha": args.cd_alpha,
+                "cd_beta": args.cd_beta
+            }
 
         results_data.append(new_item)
 
@@ -174,7 +179,7 @@ if __name__ == "__main__":
     parser.add_argument("--conv-mode", type=str, default="llava_v1")
     parser.add_argument("--noise_step", type=int, default=600)
     parser.add_argument("--use_cd", action='store_true', default=True)
-    parser.add_argument("--cd_alpha", type=float, default=1)
+    parser.add_argument("--cd_alpha", type=float, default=0.1)
     parser.add_argument("--cd_beta", type=float, default=0.1)
     parser.add_argument("--seed", type=int, default=42)
 

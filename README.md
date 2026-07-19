@@ -101,7 +101,7 @@ python Data_gen/rob_pair/gen/gendata_llava.py \
   --conv-mode llava_v1 \
   --noise_step 600 \
   --use_cd \
-  --cd_alpha 1 \
+  --cd_alpha 0.1 \
   --cd_beta 0.1
 ```
 
