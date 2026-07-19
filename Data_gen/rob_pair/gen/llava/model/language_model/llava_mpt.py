@@ -1,18 +1,3 @@
-#    Copyright 2023 Haotian Liu
-#
-#    Licensed under the Apache License, Version 2.0 (the "License");
-#    you may not use this file except in compliance with the License.
-#    You may obtain a copy of the License at
-#
-#        http://www.apache.org/licenses/LICENSE-2.0
-#
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS,
-#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#    See the License for the specific language governing permissions and
-#    limitations under the License.
-
-
 from typing import List, Optional, Tuple
 import warnings
 
@@ -37,12 +22,12 @@ class LlavaMPTModel(LlavaMetaModel, MPTModel):
     def __init__(self, config: MPTConfig):
         config.hidden_size = config.d_model
         super(LlavaMPTModel, self).__init__(config)
-    
+
     def embed_tokens(self, x):
         return self.wte(x)
 
 
-class LlavaMPTForCausalLM(MPTForCausalLM, LlavaMetaForCausalLM):#写在这里
+class LlavaMPTForCausalLM(MPTForCausalLM, LlavaMetaForCausalLM):
     config_class = LlavaMPTConfig
     supports_gradient_checkpointing = True
 
@@ -66,7 +51,7 @@ class LlavaMPTForCausalLM(MPTForCausalLM, LlavaMetaForCausalLM):#写在这里
         return self.transformer
 
     def _set_gradient_checkpointing(self, module, value=False):
-        if isinstance(module, LlavaMPTModel):#判断是不是实例的函数
+        if isinstance(module, LlavaMPTModel):
             module.gradient_checkpointing = value
 
     def forward(self, input_ids: torch.LongTensor, past_key_values: Optional[List[Tuple[torch.FloatTensor]]]=None, attention_mask: Optional[torch.ByteTensor]=None, prefix_mask: Optional[torch.ByteTensor]=None, sequence_id: Optional[torch.LongTensor]=None, labels: Optional[torch.LongTensor]=None, return_dict: Optional[bool]=None, output_attentions: Optional[bool]=None, output_hidden_states: Optional[bool]=None, use_cache: Optional[bool]=None, images=None):
@@ -75,7 +60,7 @@ class LlavaMPTForCausalLM(MPTForCausalLM, LlavaMetaForCausalLM):#写在这里
 
         input_ids, attention_mask, past_key_values, inputs_embeds, labels = self.prepare_inputs_labels_for_multimodal(input_ids, attention_mask, past_key_values, labels, images)
         outputs = self.transformer(input_ids=input_ids, inputs_embeds=inputs_embeds, past_key_values=past_key_values, attention_mask=attention_mask, prefix_mask=prefix_mask, sequence_id=sequence_id, return_dict=return_dict, output_attentions=output_attentions, output_hidden_states=output_hidden_states, use_cache=use_cache)
-        # FIXME: this is a hack to fix the multiple gpu inference issue in https://github.com/haotian-liu/LLaVA/issues/338
+
         logits = F.linear(outputs.last_hidden_state.to(self.transformer.wte.weight.device), self.transformer.wte.weight)
         if self.logit_scale is not None:
             if self.logit_scale == 0:

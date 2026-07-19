@@ -22,10 +22,7 @@ except ImportError as e:
 
 
 def generate_mmhal_responses(args):
-    """
-    Loads the MMHal-Bench dataset, generates responses using your trained LLaVA model,
-    and saves them to a new JSON file.
-    """
+
     print("Loading model...")
     disable_torch_init()
     model_path = os.path.expanduser(args.model_path)
@@ -45,10 +42,10 @@ def generate_mmhal_responses(args):
 
     for item in tqdm(bench_data, desc="Evaluating MMHal-Bench"):
         question_text = item["question"]
-        
+
         image_filename = item["image_src"].split('/')[-1]
         image_path = os.path.join(args.image_folder, image_filename)
-        
+
         if model.config.mm_use_im_start_end:
             prompt_text = DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN + '\n' + question_text
         else:
@@ -59,7 +56,7 @@ def generate_mmhal_responses(args):
         conv.append_message(conv.roles[1], None)
         prompt = conv.get_prompt()
         input_ids = tokenizer_image_token(prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt').unsqueeze(0).cuda()
-        
+
         image_tensor = None
         try:
             image = Image.open(image_path).convert('RGB')
@@ -112,16 +109,16 @@ def generate_mmhal_responses(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    
+
     parser.add_argument("--model-path", type=str, default="", help="Path to your model weights.")
     parser.add_argument("--model-base", type=str, default="llava-hf/llava-1.5-7b-hf", help="Path to the base model if your model is a LoRA adapter.")
     parser.add_argument("--template-file", type=str, default="data/MMHal-Bench/response_template.json", help="Path to the MMHal-Bench template file.")
     parser.add_argument("--image-folder", type=str, default="data/MMHal-Bench/images", help="Path to the folder containing all MMHal-Bench images.")
     parser.add_argument("--output-file", type=str, default="", help="Path to the output file for evaluation results.")
-    
+
     parser.add_argument("--conv-mode", type=str, default="llava_v1", help="Conversation template mode.")
     parser.add_argument("--num-beams", type=int, default=1, help="Number of beams for beam search.")
-    
+
     args = parser.parse_args()
-    
+
     generate_mmhal_responses(args)

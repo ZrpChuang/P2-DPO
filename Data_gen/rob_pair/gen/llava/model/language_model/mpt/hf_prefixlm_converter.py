@@ -1,11 +1,3 @@
-"""Converts Huggingface Causal LM to Prefix LM.
-
-Conversion does lightweight surgery on a HuggingFace
-Causal LM to convert it to a Prefix LM.
-
-Prefix LMs accepts a `bidirectional_mask` input in `forward`
-and treat the input prompt as the prefix in `generate`.
-"""
 import math
 import warnings
 from types import MethodType
@@ -27,28 +19,14 @@ _SUPPORTED_GPT_MODELS = (GPT2LMHeadModel, GPTJForCausalLM, GPTNeoForCausalLM, GP
 CAUSAL_GPT_TYPES = Union[GPT2LMHeadModel, GPTJForCausalLM, GPTNeoForCausalLM, GPTNeoXForCausalLM]
 
 def _convert_gpt_causal_lm_to_prefix_lm(model: CAUSAL_GPT_TYPES) -> CAUSAL_GPT_TYPES:
-    """Converts a GPT-style Causal LM to a Prefix LM.
 
-    Supported HuggingFace model classes:
-        - `GPT2LMHeadModel`
-        - `GPTNeoForCausalLM`
-        - `GPTNeoXForCausalLM`
-        - `GPTJForCausalLM`
-
-    See `convert_hf_causal_lm_to_prefix_lm` for more details.
-    """
     if hasattr(model, '_prefix_lm_converted'):
         return model
     assert isinstance(model, _SUPPORTED_GPT_MODELS)
     assert model.config.add_cross_attention == False, 'Only supports GPT-style decoder-only models'
 
     def _get_attn_modules(model: CAUSAL_GPT_TYPES) -> List[torch.nn.Module]:
-        """Helper that gets a list of the model's attention modules.
 
-        Each module has a `bias` buffer used for causal masking. The Prefix LM
-        conversion adds logic to dynamically manipulate these biases to support
-        Prefix LM attention masking.
-        """
         attn_modules = []
         if isinstance(model, GPTNeoXForCausalLM):
             blocks = model.gpt_neox.layers
@@ -69,7 +47,7 @@ def _convert_gpt_causal_lm_to_prefix_lm(model: CAUSAL_GPT_TYPES) -> CAUSAL_GPT_T
     setattr(model, '_original_generate', getattr(model, 'generate'))
 
     def forward(self: CAUSAL_GPT_TYPES, input_ids: Optional[torch.LongTensor]=None, past_key_values: Optional[Tuple[Tuple[torch.Tensor]]]=None, attention_mask: Optional[torch.FloatTensor]=None, bidirectional_mask: Optional[torch.Tensor]=None, token_type_ids: Optional[torch.LongTensor]=None, position_ids: Optional[torch.LongTensor]=None, head_mask: Optional[torch.FloatTensor]=None, inputs_embeds: Optional[torch.FloatTensor]=None, labels: Optional[torch.LongTensor]=None, use_cache: Optional[bool]=None, output_attentions: Optional[bool]=None, output_hidden_states: Optional[bool]=None, return_dict: Optional[bool]=None):
-        """Wraps original forward to enable PrefixLM attention."""
+
 
         def call_og_forward():
             if isinstance(self, GPTNeoXForCausalLM):
@@ -97,7 +75,7 @@ def _convert_gpt_causal_lm_to_prefix_lm(model: CAUSAL_GPT_TYPES) -> CAUSAL_GPT_T
         return output
 
     def generate(self: CAUSAL_GPT_TYPES, *args: tuple, **kwargs: Dict[str, Any]):
-        """Wraps original generate to enable PrefixLM attention."""
+
         attn_modules = _get_attn_modules(model)
         for attn_module in attn_modules:
             attn_module.bias.data[:] = 1
@@ -111,13 +89,7 @@ def _convert_gpt_causal_lm_to_prefix_lm(model: CAUSAL_GPT_TYPES) -> CAUSAL_GPT_T
     return model
 
 def _convert_bloom_causal_lm_to_prefix_lm(model: BloomForCausalLM) -> BloomForCausalLM:
-    """Converts a BLOOM Causal LM to a Prefix LM.
 
-    Supported HuggingFace model classes:
-        - `BloomForCausalLM`
-
-    See `convert_hf_causal_lm_to_prefix_lm` for more details.
-    """
     if hasattr(model, '_prefix_lm_converted'):
         return model
     assert isinstance(model, BloomForCausalLM)
@@ -231,7 +203,7 @@ def _convert_bloom_causal_lm_to_prefix_lm(model: BloomForCausalLM) -> BloomForCa
     KeyValueT = Tuple[torch.Tensor, torch.Tensor]
 
     def forward(self: BloomForCausalLM, input_ids: Optional[torch.LongTensor]=None, past_key_values: Optional[Tuple[KeyValueT, ...]]=None, attention_mask: Optional[torch.Tensor]=None, bidirectional_mask: Optional[torch.Tensor]=None, head_mask: Optional[torch.Tensor]=None, inputs_embeds: Optional[torch.Tensor]=None, labels: Optional[torch.Tensor]=None, use_cache: Optional[bool]=None, output_attentions: Optional[bool]=None, output_hidden_states: Optional[bool]=None, return_dict: Optional[bool]=None, **deprecated_arguments) -> Union[Tuple[torch.Tensor], CausalLMOutputWithCrossAttentions]:
-        """Replacement forward method for BloomCausalLM."""
+
         if deprecated_arguments.pop('position_ids', False) is not False:
             warnings.warn('`position_ids` have no functionality in BLOOM and will be removed ' + 'in v5.0.0. You can safely ignore passing `position_ids`.', FutureWarning)
         if len(deprecated_arguments) > 0:
@@ -267,13 +239,7 @@ def _convert_bloom_causal_lm_to_prefix_lm(model: BloomForCausalLM) -> BloomForCa
     return model
 
 def _convert_opt_causal_lm_to_prefix_lm(model: OPTForCausalLM) -> OPTForCausalLM:
-    """Converts an OPT Causal LM to a Prefix LM.
 
-    Supported HuggingFace model classes:
-        - `OPTForCausalLM`
-
-    See `convert_hf_causal_lm_to_prefix_lm` for more details.
-    """
     if hasattr(model, '_prefix_lm_converted'):
         return model
     assert isinstance(model, OPTForCausalLM)
@@ -316,7 +282,7 @@ def _convert_opt_causal_lm_to_prefix_lm(model: OPTForCausalLM) -> OPTForCausalLM
         return outputs
 
     def generate(self: OPTForCausalLM, *args: tuple, **kwargs: Dict[str, Any]):
-        """Wraps original generate to enable PrefixLM-style attention."""
+
         self.model.decoder.bidirectional_mask = 'g'
         try:
             output = self._original_generate(*args, **kwargs)
@@ -333,62 +299,7 @@ _SUPPORTED_HF_MODELS = _SUPPORTED_GPT_MODELS + (BloomForCausalLM, OPTForCausalLM
 CAUSAL_LM_TYPES = Union[GPT2LMHeadModel, GPTJForCausalLM, GPTNeoForCausalLM, GPTNeoXForCausalLM, BloomForCausalLM, OPTForCausalLM]
 
 def convert_hf_causal_lm_to_prefix_lm(model: CAUSAL_LM_TYPES) -> CAUSAL_LM_TYPES:
-    """Converts a HuggingFace Causal LM to a Prefix LM.
 
-    Supported HuggingFace model classes:
-        - `GPT2LMHeadModel`
-        - `GPTNeoForCausalLM`
-        - `GPTNeoXForCausalLM`
-        - `GPTJForCausalLM`
-        - `BloomForCausalLM`
-        - `OPTForCausalLM`
-
-    Conversion to a Prefix LM is done by modifying the `forward` method, and possibly also the
-    `generate` method and/or select underlying methods depending on the model class.
-
-    These changes preserve the model API, but add a new input to `forward`: "bidirectional_mask".
-
-    Notes on training:
-        To actually train the converted model as a Prefix LM, training batches will need to indicate
-        the prefix/target structure by including `bidirectional_mask` as part of the batch inputs.
-
-        **This is not a standard input and requires custom layers either within or after your dataloader.**
-
-        In addition to adding `bidirectional_mask` to the batch, this custom code should modify `labels`
-        such that `batch['labels'][batch['bidirectional_mask'] == 1] == -100`.
-        That is, the prefix portion of the sequence should not generate any loss. Loss should only be
-        generated by the target portion of the sequence.
-
-    Notes on `GPTNeoForCausalLM`:
-        To simplify the implementation, "global" and "local" attention layers are handled differently.
-        For "global" layers, we handle conversion as described above. For "local" layers, which use a
-        causal attention mask within a restricted local window, we do not alter the masking.
-
-    Notes on `forward` method conversion:
-        After conversion, the `forward` method will handle a new input, `bidirectional_mask`,
-        which should be a [batch_size, seq_length] byte tensor, where 1 indicates token positions
-        belonging to the prefix (prefix tokens can attend to one another bidirectionally), and
-        0 indicates token positions belonging to the target.
-
-        The new `forward` method will incorporate `bidirectional_mask` (if supplied) into the existing
-        causal mask, call the original `forward` method, and (if the causal mask is a buffer) reset
-        the causal masks before returning the result.
-
-    Notes on `generate` method conversion:
-        After conversion, the `generate` method will have the same signature but will internally
-        convert all causal masks to be purely bidirectional, call the original `generate` method, and
-        (where appropriate) reset the causal masks before returning the result.
-
-        This works thanks to the logic of the HuggingFace `generate` API, which first encodes the token
-        "prompt" passed to `generate` (which is treated as the prefix) and then sequentially generates
-        each new token. Encodings are cached as generation happens, so all prefix tokens can attend to one
-        another (as expected in a Prefix LM) and generated tokens can only attend to prefix tokens and
-        previously-generated tokens (also as expected in a Prefix LM).
-
-    To preserve the API, the original methods are renamed to `_original_forward` and
-    `_original_generate`, and replaced with new `forward` and `generate` methods that wrap
-    them, respectively. Although implementation details vary by model class.
-    """
     if isinstance(model, _SUPPORTED_GPT_MODELS):
         return _convert_gpt_causal_lm_to_prefix_lm(model)
     elif isinstance(model, BloomForCausalLM):
@@ -399,11 +310,7 @@ def convert_hf_causal_lm_to_prefix_lm(model: CAUSAL_LM_TYPES) -> CAUSAL_LM_TYPES
         raise TypeError(f'Cannot convert model to Prefix LM. ' + f'Model does not belong to set of supported HF models:' + f'\n{_SUPPORTED_HF_MODELS}')
 
 def add_bidirectional_mask_if_missing(batch: Dict[str, Any]):
-    """Attempts to add bidirectional_mask to batch if missing.
 
-    Raises:
-        KeyError if bidirectional_mask is missing and can't be inferred
-    """
     if 'bidirectional_mask' not in batch:
         if batch.get('mode', None) == 'icl_task':
             batch['bidirectional_mask'] = batch['attention_mask'].clone()

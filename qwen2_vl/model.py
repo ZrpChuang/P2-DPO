@@ -37,7 +37,7 @@ def split_model():
     total_gpus = torch.cuda.device_count()
     rank, world_size = get_rank_and_world_size()
     num_gpus = total_gpus // world_size
-    # + 8 is virtual layers for the memory of visual
+
     num_layers = 80 + 8
     num_layers_per_gpu = math.ceil(num_layers / num_gpus)
     num_layers_per_gpu = [num_layers_per_gpu] * num_gpus
@@ -76,7 +76,7 @@ class Qwen2VLChat(Qwen2VLPromptMixin, BaseModel):
         repetition_penalty=1.0,
         use_custom_prompt: bool = True,
         system_prompt: str | None = None,
-        post_process: bool = False,  # if True, will try to only extract stuff in the last \boxed{}.
+        post_process: bool = False,
         verbose: bool = False,
     ):
         super().__init__(use_custom_prompt=use_custom_prompt)
@@ -113,7 +113,7 @@ class Qwen2VLChat(Qwen2VLPromptMixin, BaseModel):
         max_gpu_mem = max(gpu_mems) if gpu_mems != [] else -1
         assert max_gpu_mem > 0
 
-        # If only one process and GPU memory is less than 40GB
+
         if '72b' in self.model_path.lower() or '32b' in self.model_path.lower():
             self.model = MODEL_CLS.from_pretrained(
                 model_path, torch_dtype='auto', device_map=split_model(), attn_implementation='flash_attention_2'
@@ -121,7 +121,7 @@ class Qwen2VLChat(Qwen2VLPromptMixin, BaseModel):
             self.model.eval()
         elif auto_split_flag():
             assert world_size == 1, 'Only support world_size == 1 when AUTO_SPLIT is set for non-72B Qwen2-VL'
-            # Will Use All GPUs to run one model
+
             self.model = MODEL_CLS.from_pretrained(
                 model_path, torch_dtype='auto', device_map='auto', attn_implementation='flash_attention_2'
             )
@@ -134,9 +134,7 @@ class Qwen2VLChat(Qwen2VLPromptMixin, BaseModel):
         torch.cuda.empty_cache()
 
     def _prepare_content(self, inputs: list[dict[str, str]], dataset: str | None = None) -> list[dict[str, str]]:
-        """
-        inputs list[dict[str, str]], each dict has keys: ['type', 'value']
-        """
+
         content = []
         for s in inputs:
             if s['type'] == 'image':
@@ -204,7 +202,7 @@ class Qwen2VLChat(Qwen2VLPromptMixin, BaseModel):
             generated_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False
         )
         response = out[0]
-        
+
         if self.post_process:
             resp = response.split('\\boxed{')[-1]
             lt = len(resp)

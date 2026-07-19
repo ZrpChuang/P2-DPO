@@ -62,15 +62,13 @@ def tokenizer_image_token(prompt, tokenizer, image_token_index=IMAGE_TOKEN_INDEX
     return input_ids
 
 
-def get_model_name_from_path(model_path):  #简单的获取一个字符串
+def get_model_name_from_path(model_path):
     model_path = model_path.strip("/")
     model_paths = model_path.split("/")
     if model_paths[-1].startswith('checkpoint-'):
         return model_paths[-2] + "_" + model_paths[-1]
     else:
         return model_paths[-1]
-
-
 
 
 class KeywordsStoppingCriteria(StoppingCriteria):
@@ -86,7 +84,7 @@ class KeywordsStoppingCriteria(StoppingCriteria):
         self.start_len = input_ids.shape[1]
 
     def __call__(self, output_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs) -> bool:
-        assert output_ids.shape[0] == 1, "Only support batch size 1 (yet)"  # TODO
+        assert output_ids.shape[0] == 1, "Only support batch size 1 (yet)"
         offset = min(output_ids.shape[1] - self.start_len, 3)
         self.keyword_ids = [keyword_id.to(output_ids.device) for keyword_id in self.keyword_ids]
         for keyword_id in self.keyword_ids:

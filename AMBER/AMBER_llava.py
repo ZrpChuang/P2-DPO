@@ -27,13 +27,13 @@ def generate_model_responses(args):
 
     output_file_path = os.path.expanduser(args.output_file)
     os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
-    
+
     with open(output_file_path, "w", encoding='utf-8') as ans_file:
         for item in tqdm(questions, desc="Generating responses"):
             item_id = item["id"]
             image_file = item["image"]
             query_text = item["query"]
-            
+
             if model.config.mm_use_im_start_end:
                 prompt_text = DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN + '\n' + query_text
             else:
@@ -89,11 +89,11 @@ if __name__ == "__main__":
     parser.add_argument("--question-file", type=str, default="data/AMBER/query/query_all.json")
     parser.add_argument("--image-folder", type=str, default="data/AMBER/images")
     parser.add_argument("--output-file", type=str, default="outputs/AMBER/AMBER_llava_responses.jsonl")
-    
+
     parser.add_argument("--conv-mode", type=str, default="llava_v1", help="Conversation template mode.")
     parser.add_argument("--temperature", type=float, default=0.2, help="Temperature for generation; smaller is more deterministic.")
     parser.add_argument("--top_p", type=float, default=None, help="Top-p (nucleus) sampling parameter.")
-    
+
     args = parser.parse_args()
-    
+
     generate_model_responses(args)

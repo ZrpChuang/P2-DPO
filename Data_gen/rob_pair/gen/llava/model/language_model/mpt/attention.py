@@ -1,4 +1,3 @@
-"""Attention layers."""
 import math
 import warnings
 from typing import Optional
@@ -149,11 +148,7 @@ def triton_flash_attn_fn(query, key, value, n_heads, past_key_value=None, softma
     return (output, None, past_key_value)
 
 class MultiheadAttention(nn.Module):
-    """Multi-head self attention.
 
-    Using torch or triton attention implemetation enables user to also use
-    additive bias.
-    """
 
     def __init__(self, d_model: int, n_heads: int, attn_impl: str='triton', clip_qkv: Optional[float]=None, qk_ln: bool=False, softmax_scale: Optional[float]=None, attn_pdrop: float=0.0, low_precision_layernorm: bool=False, verbose: int=0, device: Optional[str]=None):
         super().__init__()
@@ -202,11 +197,7 @@ class MultiheadAttention(nn.Module):
         return (self.out_proj(context), attn_weights, past_key_value)
 
 class MultiQueryAttention(nn.Module):
-    """Multi-Query self attention.
 
-    Using torch or triton attention implemetation enables user to also use
-    additive bias.
-    """
 
     def __init__(self, d_model: int, n_heads: int, attn_impl: str='triton', clip_qkv: Optional[float]=None, qk_ln: bool=False, softmax_scale: Optional[float]=None, attn_pdrop: float=0.0, low_precision_layernorm: bool=False, verbose: int=0, device: Optional[str]=None):
         super().__init__()

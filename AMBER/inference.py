@@ -18,12 +18,12 @@ def get_args():
     parser.add_argument("--safe_words", type=str, default="data/AMBER/safe_words.txt", help="Path to the safe words text file.")
     parser.add_argument("--inference_data", type=str, required=True, help="Path to the model's inference output JSON file.")
     parser.add_argument("--annotation", type=str, default="data/AMBER/annotations.json", help="Path to the ground truth annotations JSON file.")
-    
+
     parser.add_argument("--output_file", type=str, default="outputs/AMBER/llava_AMBER_result.txt", help="File to save the evaluation results.")
 
     parser.add_argument("--similarity_score", type=float, default=0.8, help="Threshold for word similarity.")
     parser.add_argument('--evaluation_type', choices=['a', 'g', 'd', 'de', 'da', 'dr'], default='a', help='a: all tasks and dimensions, g: generative, d: discriminative, de: existence, da: attribute, dr: relation')
-    
+
     args = parser.parse_args()
     return args
 
@@ -44,9 +44,9 @@ def extract_nouns(text, lemmatizer):
 
 def process_generative_item(inference_item, gt_item, association, hallucination_words, global_safe_words, word_vectors, lemmatizer, args):
     metrics_update = defaultdict(int)
-    
+
     response_nouns = extract_nouns(inference_item['response'], lemmatizer)
-    
+
     after_process_nouns = [noun for noun in response_nouns if noun in hallucination_words]
 
     truth_words = gt_item['truth']
@@ -79,22 +79,22 @@ def process_generative_item(inference_item, gt_item, association, hallucination_
             continue
 
         is_safe = False
-        
+
         if noun in safe_words:
             safe_list_map[noun] = 1
             is_safe = True
-        
+
         if noun in ha_words:
             ha_list_map[noun] = 1
 
         noun_doc = word_vectors.get(noun)
         if not noun_doc: continue
-        
+
         for check_word in ha_words:
             if check_synonyms_word(noun_doc, word_vectors.get(check_word), args.similarity_score):
                 ha_list_map[check_word] = 1
                 break
-        
+
         if not is_safe:
             for check_word in safe_words:
                 if check_synonyms_word(noun_doc, word_vectors.get(check_word), args.similarity_score):
@@ -121,9 +121,9 @@ def process_generative_item(inference_item, gt_item, association, hallucination_
 def process_discriminative_item(inference_item, gt_item):
     metrics_update = defaultdict(int)
     truth = gt_item['truth']
-    
+
     response_raw = inference_item['response'].strip().lower()
-    
+
     model_answer = None
     if response_raw.startswith('yes'):
         model_answer = 'yes'
@@ -144,14 +144,14 @@ def process_discriminative_item(inference_item, gt_item):
     metrics_update['qa_correct_num'] = 1
     if prefix:
         metrics_update[f'{prefix}qa_correct_num'] = 1
-    
+
     is_correct = (truth == model_answer)
 
     if is_correct:
         metrics_update['qa_correct_score'] = 1
         if prefix:
             metrics_update[f'{prefix}qa_correct_score'] = 1
-            
+
     if truth == 'no':
         metrics_update['qa_no_num'] = 1
         if prefix:
@@ -169,7 +169,7 @@ def process_discriminative_item(inference_item, gt_item):
             metrics_update['qa_ans_no_score'] = 1
             if prefix:
                 metrics_update[f'{prefix}qa_ans_no_score'] = 1
-    
+
     return metrics_update
 
 
@@ -219,7 +219,7 @@ def save_results_to_file(metrics, dimension, output_file):
         attr_ans_no_num = metrics['as_qa_ans_no_num'] + metrics['an_qa_ans_no_num'] + metrics['aa_qa_ans_no_num']
         attr_no_score = metrics['as_qa_no_score'] + metrics['an_qa_no_score'] + metrics['aa_qa_no_score']
         attr_no_num = metrics['as_qa_no_num'] + metrics['an_qa_no_num'] + metrics['aa_qa_no_num']
-        
+
         attr_Accuracy = round(safe_division(attr_correct_score, attr_correct_num) * 100, 1)
         attr_Precision = round(safe_division(attr_ans_no_score, attr_ans_no_num) * 100, 1)
         attr_Recall = round(safe_division(attr_no_score, attr_no_num) * 100, 1)
@@ -229,7 +229,7 @@ def save_results_to_file(metrics, dimension, output_file):
         results_lines.append(f"Precision:\t {attr_Precision}")
         results_lines.append(f"Recall:\t\t {attr_Recall}")
         results_lines.append(f"F1:\t\t {attr_F1}\n")
-    
+
     if dimension['dr']:
         Accuracy = round(safe_division(metrics['asso_qa_correct_score'], metrics['asso_qa_correct_num']) * 100, 1)
         Precision = round(safe_division(metrics['asso_qa_ans_no_score'], metrics['asso_qa_ans_no_num']) * 100, 1)
@@ -246,7 +246,7 @@ def save_results_to_file(metrics, dimension, output_file):
 
 def main():
     args = get_args()
-    
+
     metrics = defaultdict(int)
 
     association = json.load(open(args.word_association, 'r', encoding='utf-8'))
@@ -260,9 +260,9 @@ def main():
         hallucination_words.add(word1)
         for word2 in associated_words:
             hallucination_words.add(word2)
-    
+
     all_words_to_process = list(hallucination_words.union(global_safe_words))
-    
+
     docs = nlp.pipe(all_words_to_process)
     word_vectors = {word: doc for word, doc in zip(all_words_to_process, docs)}
 
@@ -275,19 +275,19 @@ def main():
         dimension['de'] = dimension['da'] = dimension['dr'] = True
     else:
         dimension[args.evaluation_type] = True
-    
+
     lemmatizer = WordNetLemmatizer()
 
     for i in tqdm(range(len(inference_data)), desc="Evaluating"):
         inference_item = inference_data[i]
         gt_item = ground_truth[inference_item['id'] - 1]
-        
+
         updates = None
         if gt_item['type'] == 'generative' and dimension['g']:
             updates = process_generative_item(inference_item, gt_item, association, hallucination_words, global_safe_words, word_vectors, lemmatizer, args)
         elif gt_item['type'].startswith('discriminative') and (dimension['de'] or dimension['da'] or dimension['dr']):
             updates = process_discriminative_item(inference_item, gt_item)
-        
+
         if updates:
             for key, value in updates.items():
                 metrics[key] += value

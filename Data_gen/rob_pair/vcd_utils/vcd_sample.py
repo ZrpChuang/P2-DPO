@@ -21,7 +21,6 @@ import transformers
 from transformers.generation.utils import SampleOutput
 
 
-
 def sample(
     self,
     input_ids: torch.LongTensor,
@@ -79,7 +78,7 @@ def sample(
         encoder_hidden_states = (
             model_kwargs["encoder_outputs"].get("hidden_states") if output_hidden_states else None
         )
-    
+
     unfinished_sequences = torch.ones(input_ids.shape[0], dtype=torch.long, device=input_ids.device)
     this_peer_finished = False
 
@@ -108,7 +107,7 @@ def sample(
 
         generation_mode = getattr(self.generation_config, "generation_mode", "normal")
         images_cd = model_kwargs.get("images_cd", None)
-        
+
         if generation_mode in ['noisy', 'contrastive'] and images_cd is not None:
             if model_kwargs_cd is None:
                 model_kwargs_cd = self._prepare_model_kwargs_for_cd(model_kwargs)
@@ -129,7 +128,7 @@ def sample(
             if generation_mode == 'noisy':
                 next_token_scores = logits_processor(input_ids, next_token_logits_cd)
                 next_token_scores = logits_warper(input_ids, next_token_scores)
-            
+
             elif generation_mode == 'contrastive':
                 cd_alpha = getattr(self.generation_config, "cd_alpha", 1.0)
                 cd_beta = getattr(self.generation_config, "cd_beta", 0.1)
@@ -144,7 +143,7 @@ def sample(
         else:
             next_token_scores = logits_processor(input_ids, next_token_logits)
             next_token_scores = logits_warper(input_ids, next_token_scores)
-        
+
         probs = nn.functional.softmax(next_token_scores, dim=-1)
         next_tokens = torch.multinomial(probs, num_samples=1).squeeze(1)
 
@@ -176,7 +175,7 @@ def sample(
         model_kwargs = self._update_model_kwargs_for_generation(
             outputs, model_kwargs, is_encoder_decoder=self.config.is_encoder_decoder
         )
-        
+
         if generation_mode in ['noisy', 'contrastive'] and images_cd is not None:
             model_kwargs_cd = self._update_model_kwargs_for_generation(
                 outputs_cd, model_kwargs_cd, is_encoder_decoder=self.config.is_encoder_decoder

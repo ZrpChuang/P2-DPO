@@ -4,7 +4,7 @@ from typing import List, Tuple
 
 
 class SeparatorStyle(Enum):
-    """Different separator style."""
+
     SINGLE = auto()
     TWO = auto()
     MPT = auto()
@@ -14,10 +14,10 @@ class SeparatorStyle(Enum):
 
 @dataclasses.dataclass
 class Conversation:
-    """A class that keeps all conversation history."""
+
     system: str
     roles: List[str]
-    messages: List[List[str]]  #实际的消息列表
+    messages: List[List[str]]
     offset: int
     sep_style: SeparatorStyle = SeparatorStyle.SINGLE
     sep: str = "###"
@@ -191,7 +191,7 @@ class Conversation:
         return Conversation(
             system=self.system,
             roles=self.roles,
-            messages=[[x, y] for x, y in self.messages],  #刚开始messages是空的
+            messages=[[x, y] for x, y in self.messages],
             offset=self.offset,
             sep_style=self.sep_style,
             sep=self.sep,
@@ -262,9 +262,13 @@ conv_vicuna_v1 = Conversation(
 )
 
 conv_llama_2 = Conversation(
-    system="""You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe.  Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Please ensure that your responses are socially unbiased and positive in nature.
-
-If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. If you don't know the answer to a question, please don't share false information.""",
+    system=(
+        "You are a helpful, respectful and honest assistant. Always answer as helpfully as possible, while being safe.  "
+        "Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. "
+        "Please ensure that your responses are socially unbiased and positive in nature.\n\n"
+        "If a question does not make any sense, or is not factually coherent, explain why instead of answering something not correct. "
+        "If you don't know the answer to a question, please don't share false information."
+    ),
     roles=("USER", "ASSISTANT"),
     version="llama_v2",
     messages=(),
@@ -288,8 +292,10 @@ conv_llava_llama_2 = Conversation(
 )
 
 conv_mpt = Conversation(
-    system="""<|im_start|>system
-A conversation between a user and an LLM-based AI assistant. The assistant gives helpful and honest answers.""",
+    system=(
+        "<|im_start|>system\n"
+        "A conversation between a user and an LLM-based AI assistant. The assistant gives helpful and honest answers."
+    ),
     roles=("<|im_start|>user\n", "<|im_start|>assistant\n"),
     version="mpt",
     messages=(),

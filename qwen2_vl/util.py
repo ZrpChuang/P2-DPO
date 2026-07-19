@@ -31,7 +31,7 @@ def get_gpu_memory():
     except Exception as e:
         print(f'{type(e)}: {str(e)}')
         return []
-    
+
 def auto_split_flag():
     flag = os.environ.get('AUTO_SPLIT', '0')
     if flag == '1':
@@ -46,7 +46,7 @@ def auto_split_flag():
             return False
     except:
         return False
-    
+
 def listinstr(lst, s):
     assert isinstance(lst, list)
     for item in lst:
@@ -96,7 +96,7 @@ def download_file(url, filename=None):
     except Exception as e:
         import logging
         logging.warning(f'{type(e)}: {e}')
-        # Handle Failed Downloads from huggingface.co
+
         if 'huggingface.co' in url:
             url_new = url.replace('huggingface.co', 'hf-mirror.com')
             try:
@@ -117,7 +117,7 @@ def parse_file(s):
         mime = mimetypes.types_map.get(suffix, 'unknown')
         return (mime, s)
     elif s.startswith('data:image/'):
-        # To be compatible with OPENAI base64 format
+
         content = s[11:]
         mime = content.split(';')[0]
         content = ';'.join(content.split(';')[1:])

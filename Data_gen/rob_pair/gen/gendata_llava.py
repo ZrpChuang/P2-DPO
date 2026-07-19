@@ -41,7 +41,7 @@ def eval_model(args):
 
     with open(os.path.expanduser(args.question_file), "r") as f:
         full_data = json.load(f)
-    
+
     results_data = []
 
     ct = 1
@@ -94,7 +94,7 @@ def eval_model(args):
                 generation_config_normal.top_k = args.top_k
 
             output_ids_normal = model.generate(
-                input_ids_factual.unsqueeze(0).cuda(), 
+                input_ids_factual.unsqueeze(0).cuda(),
                 images=image_tensor.unsqueeze(0).half().cuda(),
                 generation_config=generation_config_normal
             )
@@ -102,7 +102,7 @@ def eval_model(args):
 
 
         if args.use_cd and image_tensor_cd is not None:
-            
+
             with torch.inference_mode():
                 generation_config_noisy = GenerationConfig.from_model_config(model.config)
                 generation_config_noisy.do_sample = True
@@ -112,15 +112,15 @@ def eval_model(args):
                 generation_config_noisy.generation_mode = 'noisy'
                 if args.top_k is not None:
                     generation_config_noisy.top_k = args.top_k
-                
+
                 output_ids_noisy = model.generate(
                     input_ids_factual.unsqueeze(0).cuda(),
-                    images=image_tensor.unsqueeze(0).half().cuda(), 
+                    images=image_tensor.unsqueeze(0).half().cuda(),
                     images_cd=image_tensor_cd.unsqueeze(0).half().cuda(),
                     generation_config=generation_config_noisy
                 )
             new_item["noisy_answer"] = decode_and_clean_outputs(output_ids_noisy, input_ids_factual.shape[0], tokenizer, "</s>")
-            
+
             with torch.inference_mode():
                 generation_config_cd = GenerationConfig.from_model_config(model.config)
                 generation_config_cd.do_sample = True
@@ -132,9 +132,9 @@ def eval_model(args):
                 generation_config_cd.cd_beta = args.cd_beta
                 if args.top_k is not None:
                     generation_config_cd.top_k = args.top_k
-                
+
                 output_ids_cd = model.generate(
-                    input_ids_factual.unsqueeze(0).cuda(), 
+                    input_ids_factual.unsqueeze(0).cuda(),
                     images=image_tensor.unsqueeze(0).half().cuda(),
                     images_cd=image_tensor_cd.unsqueeze(0).half().cuda(),
                     generation_config=generation_config_cd
@@ -160,7 +160,6 @@ def eval_model(args):
 
         results_data.append(new_item)
 
-        
 
     with open(os.path.expanduser(args.answers_file), "w") as ans_file:
         json.dump(results_data, ans_file, indent=2)
@@ -171,11 +170,11 @@ def eval_model(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-path", type=str, default="")
-    parser.add_argument("--model-base", type=str, default=None) 
+    parser.add_argument("--model-base", type=str, default=None)
     parser.add_argument("--image-folder", type=str, default="")
     parser.add_argument("--question-file", type=str, default="")
     parser.add_argument("--answers-file", type=str, default="")
-    
+
     parser.add_argument("--conv-mode", type=str, default="llava_v1")
     parser.add_argument("--noise_step", type=int, default=600)
     parser.add_argument("--use_cd", action='store_true', default=True)
@@ -186,7 +185,7 @@ if __name__ == "__main__":
     parser.add_argument("--temperature", type=float, default=0.2, help="Temperature for sampling.")
     parser.add_argument("--top_p", type=float, default=0.9, help="Top-p for nucleus sampling.")
     parser.add_argument("--top_k", type=int, default=None, help="Top-k for sampling. Usually set to None if top_p is used.")
-    
+
     args = parser.parse_args()
     set_seed(args.seed)
     eval_model(args)

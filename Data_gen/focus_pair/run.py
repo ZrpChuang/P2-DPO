@@ -41,7 +41,7 @@ def save_attention_heatmap(att_map, original_image, save_path, colormap=plt.cm.j
     save_dir = os.path.dirname(save_path)
     if save_dir and not os.path.exists(save_dir):
         os.makedirs(save_dir)
-        
+
     cv2.imwrite(save_path, superimposed_img)
 
 def analyze_attention_map(att_map: np.ndarray, min_distance: int = 5, threshold_rel: float = 0.3) -> dict:
@@ -63,13 +63,13 @@ def analyze_attention_map(att_map: np.ndarray, min_distance: int = 5, threshold_
     metrics['entropy'] = -np.sum(non_zero_probs * np.log2(non_zero_probs))
 
     threshold_abs = att_map.max() * threshold_rel
-    
+
     coordinates = peak_local_max(
         att_map,
         min_distance=min_distance,
         threshold_abs=threshold_abs
     )
-    
+
     metrics['peak_count'] = len(coordinates)
     metrics['peak_coordinates'] = coordinates.tolist()
 
@@ -79,7 +79,7 @@ def analyze_attention_map(att_map: np.ndarray, min_distance: int = 5, threshold_
 
     metrics['max_attention_value'] = np.max(att_map)
     metrics['standard_deviation'] = np.std(att_map)
-    
+
     mean_val = np.mean(att_map)
     if mean_val > 0:
         metrics['peak_to_average_ratio'] = np.max(att_map) / mean_val
@@ -172,7 +172,7 @@ def vicrop_qa(model_name, method_name, image_path, question, model, processor, s
     short_prompt = f"<image>\nUSER: {short_question}\nASSISTANT:"
     prompt = f"<image>\nUSER:{question}\nASSISTANT:"
     general_prompt = f"<image>\nUSER: {general_question}\nASSISTANT:"
-    
+
     ori_generation, ori_avg_log_prob, ori_perplexity = _run_generation(model, processor, prompt, image)
 
     if method_name == 'grad_att' and bbox is None:
@@ -181,7 +181,7 @@ def vicrop_qa(model_name, method_name, image_path, question, model, processor, s
         attention_metrics = analyze_attention_map(att_map)
         entropy = attention_metrics.get('entropy')
         peak_count = attention_metrics.get('peak_count')
-    
+
     bbox = _clip_bbox(bbox, image.size)
     if bbox is not None:
         crop_image = image.crop(bbox)
@@ -199,7 +199,7 @@ def vicrop_qa(model_name, method_name, image_path, question, model, processor, s
             prompt,
             deg_image
         )
-    
+
     results = {
         "ori_generation": ori_generation,
         "multi_generation": multi_generation,

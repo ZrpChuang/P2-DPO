@@ -1,18 +1,3 @@
-#    Copyright 2023 Haotian Liu
-#
-#    Licensed under the Apache License, Version 2.0 (the "License");
-#    you may not use this file except in compliance with the License.
-#    You may obtain a copy of the License at
-#
-#        http://www.apache.org/licenses/LICENSE-2.0
-#
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS,
-#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#    See the License for the specific language governing permissions and
-#    limitations under the License.
-
-
 from abc import ABC, abstractmethod
 
 import torch
@@ -70,7 +55,7 @@ class LlavaMetaModel:
             self.mm_projector.load_state_dict(get_w(mm_projector_weights, 'mm_projector'))
 
 
-class LlavaMetaForCausalLM(ABC):#后面有继承的
+class LlavaMetaForCausalLM(ABC):
 
     @abstractmethod
     def get_model(self):
@@ -79,7 +64,7 @@ class LlavaMetaForCausalLM(ABC):#后面有继承的
     def get_vision_tower(self):
         return self.get_model().get_vision_tower()
 
-    def encode_images(self, images):#实现图像的编码
+    def encode_images(self, images):
         image_features = self.get_model().get_vision_tower()(images)
         image_features = self.get_model().mm_projector(image_features)
         return image_features
@@ -92,7 +77,7 @@ class LlavaMetaForCausalLM(ABC):#后面有继承的
             if past_key_values is not None and vision_tower is not None and images is not None and input_ids.shape[1] == 1:
                 attention_mask = torch.ones((attention_mask.shape[0], past_key_values[-1][-1].shape[-2] + 1), dtype=attention_mask.dtype, device=attention_mask.device)
             return input_ids, attention_mask, past_key_values, None, labels
-        #这里就有出口
+
 
         if type(images) is list or images.ndim == 5:
             concat_images = torch.cat([image for image in images], dim=0)
@@ -108,14 +93,14 @@ class LlavaMetaForCausalLM(ABC):#后面有继承的
         cur_image_idx = 0
         for batch_idx, cur_input_ids in enumerate(input_ids):
             if (cur_input_ids == IMAGE_TOKEN_INDEX).sum() == 0:
-                # multimodal LLM, but the current sample is not multimodal
-                # FIXME: this is a hacky fix, for deepspeed zero3 to work
+
+
                 half_len = cur_input_ids.shape[0] // 2
                 cur_image_features = image_features[cur_image_idx]
                 cur_input_embeds_1 = self.get_model().embed_tokens(cur_input_ids[:half_len])
                 cur_input_embeds_2 = self.get_model().embed_tokens(cur_input_ids[half_len:])
                 cur_input_embeds = torch.cat([cur_input_embeds_1, cur_image_features[0:0], cur_input_embeds_2], dim=0)
-                
+
                 new_input_embeds.append(cur_input_embeds)
                 if labels is not None:
                     new_labels.append(labels[batch_idx])
@@ -204,7 +189,7 @@ class LlavaMetaForCausalLM(ABC):#后面有继承的
                 assert attention_mask.shape == new_input_embeds.shape[:2]
 
         return None, attention_mask, past_key_values, new_input_embeds, new_labels
-    #这里是准备输入
+
 
     def initialize_vision_tokenizer(self, model_args, tokenizer):
         if model_args.mm_use_im_patch_token:

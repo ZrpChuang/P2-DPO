@@ -25,7 +25,7 @@ def eval_model(args):
     model_path = os.path.expanduser(args.model_path)
     model_name = get_model_name_from_path(model_path)
     tokenizer, model, image_processor, context_len = load_pretrained_model(model_path, args.model_base, model_name)
-    
+
     questions = [json.loads(q) for q in open(os.path.expanduser(args.question_file), "r")]
     answers_file = os.path.expanduser(args.answers_file)
     os.makedirs(os.path.dirname(answers_file), exist_ok=True)
@@ -35,7 +35,7 @@ def eval_model(args):
         image_file = line["image"]
         qs = line["text"]
         cur_prompt = qs
-        
+
         if model.config.mm_use_im_start_end:
             qs = DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN + '\n' + qs
         else:
@@ -44,26 +44,26 @@ def eval_model(args):
         conv = conv_templates[args.conv_mode].copy()
         conv.append_message(conv.roles[0], qs)
         conv.append_message(conv.roles[1], None)
-        
+
         prompt = conv.get_prompt()
 
         input_ids = tokenizer_image_token(prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt').unsqueeze(0).cuda()
 
         image = Image.open(os.path.join(args.image_folder, image_file))
         image_tensor = image_processor.preprocess(image, return_tensors='pt')['pixel_values'][0]
-        
+
         stop_str = conv.sep if conv.sep_style != SeparatorStyle.TWO else conv.sep2
         keywords = [stop_str]
         stopping_criteria = KeywordsStoppingCriteria(keywords, tokenizer, input_ids)
-            
+
         with torch.inference_mode():
                 output_ids = model.generate(
                     input_ids,
                     images=image_tensor.unsqueeze(0).half().cuda(),
-                    
+
                     do_sample=False,
                     num_beams=2,
-                    
+
                     max_new_tokens=256,
                     use_cache=True,
                     stopping_criteria=[stopping_criteria]
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     parser.add_argument("--top_p", type=float, default=1)
     parser.add_argument("--top_k", type=int, default=None)
     parser.add_argument("--seed", type=int, default=42)
-    
+
     parser.add_argument("--question-file", type=str, default=None)
     parser.add_argument("--answers-file", type=str, default=None)
     parser.add_argument("--question-dir", type=str, default="data/POPE/coco")
@@ -117,19 +117,19 @@ if __name__ == "__main__":
 
         question_file = os.path.join(base_question_path, f"coco_pope_{mode}.json")
         answers_file = os.path.join(base_answers_path, f"coco_{mode}_nb2.jsonl")
-        
+
         args.question_file = question_file
         args.answers_file = answers_file
 
         output_dir = os.path.dirname(args.answers_file)
         os.makedirs(output_dir, exist_ok=True)
-        
+
         print(f"Question File: {args.question_file}")
         print(f"Answers File: {args.answers_file}")
 
         set_seed(args.seed)
         eval_model(args)
-        
+
         print(f"--- [Mode: {mode} finished] ---\n")
 
     print("All modes processed!")
