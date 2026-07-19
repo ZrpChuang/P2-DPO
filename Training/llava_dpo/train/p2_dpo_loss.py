@@ -1,10 +1,3 @@
-"""P2-DPO losses aligned with the paper objective.
-
-The functions in this file operate on sequence log-probabilities. The trainer is
-responsible for running the policy/reference models under the required visual
-contexts and passing the resulting log-probabilities here.
-"""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -17,8 +10,6 @@ from torch import Tensor
 
 @dataclass(frozen=True)
 class P2DPOLossConfig:
-    """Hyperparameters from the P2-DPO objective."""
-
     beta: float = 0.1
     lambda_calib: float = 0.3
     dynamic_loss_weighting: bool = True
@@ -30,13 +21,6 @@ class P2DPOLossConfig:
 
 @dataclass
 class P2DPOLossInputs:
-    """Sequence log-probabilities needed by the paper losses.
-
-    Each tensor should be shaped ``(batch,)`` and should already be reduced over
-    the answer tokens, either by summation or by the same averaging convention
-    used elsewhere in training.
-    """
-
     focus_policy_win: Optional[Tensor] = None
     focus_policy_lose: Optional[Tensor] = None
     focus_ref_win: Optional[Tensor] = None
@@ -89,12 +73,6 @@ def dpo_loss(
     ref_lose_logps: Tensor,
     beta: float,
 ) -> Tuple[Tensor, Tensor]:
-    """Standard DPO loss used by both focus and robustness pairs.
-
-    Implements ``-log sigmoid(beta * ((log pi_theta^w - log pi_ref^w)
-    - (log pi_theta^l - log pi_ref^l)))``.
-    """
-
     _same_shape(policy_win_logps, policy_lose_logps, ref_win_logps, ref_lose_logps)
     logits = beta * (
         (policy_win_logps - ref_win_logps)
@@ -110,14 +88,6 @@ def calibration_loss(
     ref_lose_deg_logps: Tensor,
     beta: float,
 ) -> Tuple[Tensor, Tensor]:
-    """Calibration loss over perceptual confidence gains.
-
-    Implements the paper term
-    ``-log sigmoid(beta * ((log pi_theta(y_w|I,I_crop,P)
-    - log pi_theta(y_w|I_deg,P)) - (log pi_ref(y_l|I,I_crop,P)
-    - log pi_ref(y_l|I_deg,P))))``.
-    """
-
     _same_shape(
         policy_win_aug_logps,
         policy_win_deg_logps,
@@ -139,8 +109,6 @@ def dynamic_deficit_weights(
     tau: float = 0.1,
     eps: float = 1e-8,
 ) -> Tuple[Tensor, Tensor]:
-    """Compute DDW weights from the CLIPScore ratio in the paper."""
-
     _same_shape(clip_crop_score, clip_image_score)
     ratio = clip_crop_score / clip_image_score.clamp_min(eps)
     alpha = alpha_max * torch.tanh((ratio - 1.0) / tau)
@@ -153,12 +121,6 @@ def p2_dpo_loss(
     inputs: P2DPOLossInputs,
     config: P2DPOLossConfig = P2DPOLossConfig(),
 ) -> P2DPOLossOutput:
-    """Compute the unified P2-DPO objective.
-
-    Supports full P2-DPO batches containing both focus and robustness pairs, and
-    also supports ablation batches containing only one pair type.
-    """
-
     focus_dpo_losses = None
     focus_logits = None
     if inputs.focus_policy_win is not None:

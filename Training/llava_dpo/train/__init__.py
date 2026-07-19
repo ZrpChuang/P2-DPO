@@ -1,5 +1,3 @@
-"""Training losses and entry points for P2-DPO."""
-
 from .p2_dpo_loss import (
     P2DPOLossConfig,
     P2DPOLossInputs,

@@ -1,10 +1,3 @@
-"""P2-DPO training entry helpers.
-
-This module keeps the paper-aligned loss import path used by the shell scripts:
-``llava_dpo.train.p2_dpo_train``. The full model/data training loop should call
-``compute_p2_dpo_loss`` after collecting the required sequence log-probabilities.
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -51,11 +44,7 @@ def compute_p2_dpo_loss(
 
 
 def main() -> None:
-    raise SystemExit(
-        "This repository exposes the paper-aligned P2-DPO loss. "
-        "Wire compute_p2_dpo_loss into the local LLaVA training loop before "
-        "launching distributed training."
-    )
+    raise SystemExit("No standalone CLI is defined for this module.")
 
 
 if __name__ == "__main__":
